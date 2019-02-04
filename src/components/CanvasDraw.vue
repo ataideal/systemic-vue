@@ -245,7 +245,7 @@
     },
     mounted() {
       this.draw = new Draw(this);
-      this.socket = new Socket('ws://192.168.0.15:4000/socket')
+      this.socket = new Socket('wss://systemic-api.herokuapp.com/socket')
       this.socket.connect()
       this.channel = this.socket.channel("room:lobby",{})
       this.channel.join()

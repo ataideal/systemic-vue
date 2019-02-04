@@ -30,12 +30,11 @@
                             type="email"
                     />
 
-                    <v-text-field
-                            v-model="cellphone"
-                            label="Telefone"
+                    <v-select
+                            v-model="role"
+                            label="Tipo"
                             :rules="[validationRules.required]"
-                            type="text"
-                            mask="(##) #####-####"
+                            :items="types"
                     />
 
                     <v-text-field
@@ -97,17 +96,18 @@
 <script>
   import AuthenticationLayout from '@/layouts/AuthenticationLayout';
   import validationRules from '@/mixins/validation-rules';
-
+  import UserService from '@/services/UserService'
   export default {
     name: 'FormSignup',
     components: {
       AuthenticationLayout,
+      UserService,
     },
     mixins: [validationRules],
     data: () => ({
       show: true,
       agreed: false,
-      cellphone: '',
+      role: 'Aluno',
       cpf: '',
       fullName: '',
       email: '',
@@ -115,42 +115,34 @@
       password: '',
       valid: false,
       validationRules,
+      types:[
+        'Aluno', 'Professor', 'Gerente', 'Admin'
+      ],
     }),
     methods: {
-      onCaptchaVerified(recaptchaToken) {
-        const userParams = {
-          name: this.fullName,
-          cpf: this.cpfcnpj,
-          cellphone: this.cellphone,
-          email: this.email,
-          password: this.password,
-          recaptcha: recaptchaToken,
-        };
-        UserService
-            .createUser(userParams)
-            .then(() => {
-              this.$store.dispatch('setUserSignUpData', userParams);
-              this.$router.push('cadastrar/sucesso');
-            })
-            .catch((responseError) => {
-              this.$swal({
-                type: 'error',
-                title: 'Erro',
-                html: responseError.response.data.join('<br/>'),
-              });
-            })
-            .finally(() => {
-              this.$store.dispatch('setLoadingDialog', false);
-              this.$refs.recaptcha.reset();
-            });
-      },
-      onCaptchaExpired() {
-        this.$refs.recaptcha.reset();
-        this.$store.dispatch('setLoadingDialog', false);
-      },
       createUser() {
+        const userParams = {
+          role: this.role,
+          cpf: this.cpf,
+          name: this.fullName,
+          email: this.email,
+          password: this.password
+        }
         this.$store.dispatch('setLoadingDialog', true);
-        this.$refs.recaptcha.execute();
+        UserService
+          .newUser(userParams)
+          .then(() => {
+            this.$router.push({name: 'Home'});
+          })
+          .catch((responseError) => {
+            this.$store.dispatch('setSnackBar', {
+              text: responseError.response.data.toString(),
+              color: 'success'
+            });
+          })
+          .finally(() => {
+            this.$store.dispatch('setLoadingDialog', false);
+          });
       },
     },
   };
